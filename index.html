@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Porsche Sales Analytics</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        porsche: {
+                            black: '#000000',
+                            dark: '#121212',
+                            panel: '#1e1e1e',
+                            gray: '#888888',
+                            light: '#e0e0e0',
+                            white: '#ffffff',
+                            red: '#d5001c', 
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #121212; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333333; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #d5001c; 
+        }
+        .filter-select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23888888'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1em;
+        }
+    </style>
+</head>
+<body class="flex flex-col md:flex-row min-h-screen selection:bg-porsche-red selection:text-white">
+
+    <!-- Sidebar / Filters -->
+    <aside class="w-full md:w-72 bg-porsche-black text-porsche-white flex flex-col border-r border-gray-800 z-10 transition-all duration-300 flex-shrink-0">
+        <div class="p-8 border-b border-gray-800">
+            <h1 class="text-3xl font-light tracking-widest uppercase mb-1">Porsche</h1>
+            <p class="text-xs text-porsche-red tracking-widest uppercase font-semibold">Sales Intelligence</p>
+            <p class="text-[10px] text-porsche-gray mt-3">North America Division</p>
+        </div>
+
+        <div class="p-8 flex-grow">
+            <h2 class="text-xs font-semibold tracking-widest text-porsche-gray uppercase mb-8">Filtros de Análise</h2>
+            
+            <div class="space-y-6">
+                <!-- Filter: Model -->
+                <div>
+                    <label class="block text-[10px] text-porsche-gray mb-2 uppercase tracking-widest">Modelo</label>
+                    <select id="filter-model" class="filter-select w-full bg-porsche-panel border border-gray-700 text-sm text-porsche-light rounded-sm p-3 focus:outline-none focus:border-porsche-red transition-colors cursor-pointer hover:border-gray-500">
+                        <option value="all">Todos os Modelos</option>
+                    </select>
+                </div>
+
+                <!-- Filter: Year -->
+                <div>
+                    <label class="block text-[10px] text-porsche-gray mb-2 uppercase tracking-widest">Ano do Modelo</label>
+                    <select id="filter-year" class="filter-select w-full bg-porsche-panel border border-gray-700 text-sm text-porsche-light rounded-sm p-3 focus:outline-none focus:border-porsche-red transition-colors cursor-pointer hover:border-gray-500">
+                        <option value="all">Todos os Anos</option>
+                    </select>
+                </div>
+
+                <!-- Filter: City -->
+                <div>
+                    <label class="block text-[10px] text-porsche-gray mb-2 uppercase tracking-widest">Cidade</label>
+                    <select id="filter-city" class="filter-select w-full bg-porsche-panel border border-gray-700 text-sm text-porsche-light rounded-sm p-3 focus:outline-none focus:border-porsche-red transition-colors cursor-pointer hover:border-gray-500">
+                        <option value="all">Todas as Cidades</option>
+                    </select>
+                </div>
+
+                <!-- Filter: Pay Method -->
+                <div>
+                    <label class="block text-[10px] text-porsche-gray mb-2 uppercase tracking-widest">Método de Pagamento</label>
+                    <select id="filter-pay" class="filter-select w-full bg-porsche-panel border border-gray-700 text-sm text-porsche-light rounded-sm p-3 focus:outline-none focus:border-porsche-red transition-colors cursor-pointer hover:border-gray-500">
+                        <option value="all">Todos os Métodos</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button id="reset-filters" class="mt-10 w-full bg-transparent border border-porsche-red text-porsche-red hover:bg-porsche-red hover:text-white text-xs font-semibold py-3 transition-colors duration-300 uppercase tracking-widest rounded-sm">
+                Limpar Filtros
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-grow flex flex-col overflow-y-auto bg-porsche-dark relative">
+        
+        <!-- Hero Banner -->
+        <div class="relative w-full h-64 md:h-72 bg-black overflow-hidden flex-shrink-0 border-b border-gray-800">
+            <!-- Hero Image -->
+            <img src="https://a.storyblok.com/f/322327/1200x900/def162773b/cz26w10ox0006-911-turbo-s-front.jpg/m/1200x900/smart/filters:format(avif)" alt="Porsche Hero" class="w-full h-full object-cover object-center opacity-40">
+            
+            <div class="absolute inset-0 flex flex-col justify-center px-8 md:px-12 bg-gradient-to-r from-black/90 via-black/50 to-transparent">
+                <h2 class="text-3xl md:text-5xl font-light text-white tracking-tight mb-3">Visão Executiva</h2>
+                <p class="text-sm text-gray-400 max-w-lg font-light leading-relaxed">Dashboard interativo de performance comercial e financeira, monitorando entregas e faturamento nos Estados Unidos.</p>
+            </div>
+            
+            <!-- KPI Overlay -->
+            <div class="absolute bottom-8 right-8 flex gap-4 md:gap-6">
+                <div class="bg-porsche-panel/80 backdrop-blur-md border border-gray-700 p-4 md:p-5 rounded-sm shadow-2xl">
+                    <p class="text-[10px] uppercase tracking-widest text-porsche-gray mb-1">Total Entregue</p>
+                    <p id="total-sales-kpi" class="text-2xl md:text-3xl font-light text-white">0</p>
+                </div>
+                <div class="bg-porsche-panel/80 backdrop-blur-md border border-porsche-red/50 p-4 md:p-5 rounded-sm shadow-2xl">
+                    <p class="text-[10px] uppercase tracking-widest text-porsche-gray mb-1">Faturamento (USD)</p>
+                    <p id="total-revenue-kpi" class="text-2xl md:text-3xl font-light text-porsche-red">$0.00M</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="p-6 md:p-10 space-y-10 flex-grow">
+            <!-- Insights Cards -->
+            <div>
+                <h3 class="text-sm font-light text-white mb-6 flex items-center tracking-widest uppercase">
+                    <span class="w-1.5 h-1.5 bg-porsche-red rounded-full mr-3"></span> Highlights de Vendas
+                </h3>
+                <div id="insights-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    <!-- Cards injected via JS -->
+                </div>
+            </div>
+
+            <!-- Commercial Charts Area -->
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                
+                <!-- Chart 1: Models by City -->
+                <div class="bg-porsche-panel p-6 border border-gray-800 flex flex-col rounded-sm">
+                    <h3 class="text-sm font-light text-white uppercase tracking-widest mb-1">Modelos por Cidade</h3>
+                    <p class="text-xs text-porsche-gray mb-6">Volume comercializado dos principais modelos por localidade.</p>
+                    <div class="relative flex-grow min-h-[350px]">
+                        <canvas id="modelsByCityChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 2: Sales by State -->
+                <div class="bg-porsche-panel p-6 border border-gray-800 flex flex-col rounded-sm relative overflow-hidden">
+                    <h3 class="text-sm font-light text-white uppercase tracking-widest mb-1">Vendas por Estado (EUA)</h3>
+                    <p class="text-xs text-porsche-gray mb-8">Performance absoluta nos territórios americanos.</p>
+                    <div class="relative flex-grow min-h-[350px]">
+                        <canvas id="stateSalesChart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Financial Charts Area -->
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                
+                <!-- Chart 3: Revenue by Model -->
+                <div class="bg-porsche-panel p-6 border border-gray-800 flex flex-col rounded-sm border-t-2 border-t-porsche-red">
+                    <h3 class="text-sm font-light text-white uppercase tracking-widest mb-1">Faturamento por Modelo</h3>
+                    <p class="text-xs text-porsche-gray mb-6">Quais modelos geram maior receita financeira (USD).</p>
+                    <div class="relative flex-grow min-h-[350px]">
+                        <canvas id="revenueByModelChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 4: Average Price by Model -->
+                <div class="bg-porsche-panel p-6 border border-gray-800 flex flex-col rounded-sm border-t-2 border-t-gray-600">
+                    <h3 class="text-sm font-light text-white uppercase tracking-widest mb-1">Preço Médio de Venda</h3>
+                    <p class="text-xs text-porsche-gray mb-6">Ticket médio registrado por modelo (USD).</p>
+                    <div class="relative flex-grow min-h-[350px]">
+                        <canvas id="avgPriceByModelChart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Chart 5: Model Year Trend -->
+            <div class="bg-porsche-panel p-6 md:p-8 border border-gray-800 flex flex-col rounded-sm">
+                <h3 class="text-sm font-light text-white uppercase tracking-widest mb-1">Ano de Modelo por Período</h3>
+                <p class="text-xs text-porsche-gray mb-6">Evolução temporal das entregas (Janeiro a Dezembro).</p>
+                <div class="relative flex-grow min-h-[350px]">
+                    <canvas id="modelYearTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- 1. Base de Imagens ---
+        const modelImages = {
+            '718 Boxster': 'https://a.storyblok.com/f/322327/1272x1300/c337c1b4de/bx24i3cox0004-718-boxster-chassis.jpg/m/688x605/smart/filters:format(avif)',
+            '718 Cayman': 'https://a.storyblok.com/f/322327/1700x1300/961fae1335/cm24n3cox0009-718-cayman-chassis.jpg/m/831x565/smart/filters:format(avif)',
+            '911 Carrera': 'https://prs.porsche.com/iod/image/BR/9921B2/1/N4Igxg9gdgZglgcxALlAQynAtmgLnaAZxQG0BdAGnDSwFMAnNFUOAExRFoA9cBaAGwgB3XjHrQ+-WjFwgqEAA74izEADc09OBlnIQrWoQDWuRSAC+5qrShq44qHSi6W7PQHk0hOMXlKCUMSollT8iAAW+FBIqCBsHAAiAIIAmnIgisqBzCEgCuKsAK5gLnFuIACcFQBMAIwAQtXpmQFBoJCwiKQgAAwAkgDM6T0AcrXDI-XDAAo9wwAqAMLpDQASKwDiABwrADIAyitjR0krs2cAoivzTVS1ABq3INWLAOzp1QBq41TVAOpzX4ALWWVAG9SGYIAYgl0gNVqcwQApAAscN2aLBAEV5nCAKqIkAopKQokbabpFF9ABslN2tKoKLxUPSAFYANKHKisgCyhNZ91BIGp9UJ1IuVyo1KhgOFUI26Wpg0VSNhUvZFUVIyRioASkLqfdPulXkl2SbVuaqK92aTXjzNda8QrrZ9Za9Huktn1cVQtrt1n6Ru8-fMfiAtp8XZVWYSKkk1ZU+jz0hUkXHpqSKp9dqm-r6QIstgWEltdekLj1CRceU8oTzZVCgbKNuHWyyqBt5qz0htvuk+n9SeytkL2UknuyseHdl2Errc1RpoGQFjqjqqFjK+ksatw1ikQzV2ud7rHSA8X0nnjpuG8fcj59Fk9PjL0jnZZ9dXNKOAIIVnHoABPDh6nLKgsAgAx+BSWhNBQaoemqV5LCsEBCFoXAogQNoQBgCB6BwXQQAAKwUWgkCoXBGECBRNBsXQYDQfgMMsIA',
+            '911 Turbo S': 'https://a.storyblok.com/f/322327/1200x900/def162773b/cz26w10ox0006-911-turbo-s-front.jpg/m/600x450/smart/filters:format(avif)',
+            'Cayenne': 'https://a.storyblok.com/f/322327/3840x1648/eef423936e/cayenne-turbo-electric-dna.jpg/m/2560x1097/smart/filters:format(avif)',
+            'Macan': 'https://prs.porsche.com/iod/image/BR/XABBB1/1/N4Igxg9gdgZglgcxALlAQynAtmgLnaAZxQG0BdAGnDSwFMAnNFUOAExRFoA9cBaAGwgB3XjHrQ+-WjFwgqEAA74izEADc09OBlnIQrWoQDWuRSAC+5qrShq44qHSi6W7PQFV6AIwwBZNGAYciCKylDEqJZU-IgAFvhQSKggbBwAIgCCAJrBoQThzFEgCuKsAK5gLiluIAAaGQBCTQCMuUr5EaCQsIikIAAMAHINwf0AKmnBzQ0A0lNpAOxTAOIAHFMAMoNTgwDMOwCiUwAKR1TNYwBMU7WtVJcAwgCswZcAYncglwBqn5cA6gBOV4ALRGVF2DQALMFdm93LCAFIwiEAZWuEKy-WCUIy+yoUIOADYcct8SAocs3jiZiSCRs6RSAIpnCnualUJ5Q7acmZM4JPXwZAW1B7BIkPDEgIlvbFUGXLcXLYXygASculAElyUTEZN5b5xYNEeKAEpi+W1fUgBZElU2jJzKgLVX2hYzckLXzAqirTVjYKrRHk1ZXQPfRVUQGI+2A3zkwHHH0gQHfJ0p-4BqMg1kZVbgkAZTWfR3BNIS4IHePBN6+DVvEEa5bNEHBZa+FEgZZjTvLX7BTX-cnIxmIwGRkCIg5SxG3YIzKGq+cZKUzBrkmaqzsbbtpU0bYIbMafJnNCdMxGMpmn4LuJO32pLKjfSXBb6yt8bDXfU3YyjgCAymcegAE8OAaU1giwCADH4LJaE0FBLn6S4iUsKwQEIWhcASBBOhAGAIHoHBdBAAArBRaCQKhcEYcIFE0GxdBgNB+CwywgA',
+            'Panamera': 'https://a.storyblok.com/f/322327/1300x1300/1a2ba4f692/pa24p5kox0003-panamera-turbo-e-hybrid-driving.jpg/m/760x668/smart/filters:format(avif)',
+            'Taycan': 'https://a.storyblok.com/f/322327/3840x2160/ddbfabfa70/taycan-driving-front.jpg/m/1800x1013/smart/filters:format(avif)'
+        };
+        const defaultImage = modelImages['911 Carrera'];
+
+        // --- 2. Mock Data Generation (USA + Prices) ---
+        const modelsList = ['718 Boxster', '718 Cayman', '911 Carrera', '911 Turbo S', 'Cayenne', 'Macan', 'Panamera', 'Taycan'];
+        const yearsList = ['2022', '2023', '2024'];
+        
+        // Mapeamento realístico de cidades para estados nos EUA
+        const usLocations = {
+            'Miami': 'FL', 'Orlando': 'FL',
+            'Los Angeles': 'CA', 'San Francisco': 'CA', 'San Diego': 'CA',
+            'New York': 'NY', 
+            'Chicago': 'IL',
+            'Austin': 'TX', 'Houston': 'TX', 'Dallas': 'TX',
+            'Seattle': 'WA',
+            'Boston': 'MA',
+            'Atlanta': 'GA'
+        };
+        const citiesList = Object.keys(usLocations);
+        
+        // Preços base realísticos por modelo (EUA)
+        const basePrices = {
+            '718 Boxster': 65000, 
+            '718 Cayman': 68000, 
+            '911 Carrera': 114000,
+            '911 Turbo S': 242000, 
+            'Cayenne': 79000, 
+            'Macan': 60000,
+            'Panamera': 92000, 
+            'Taycan': 90000
+        };
+
+        const payMethodsList = ['Credit Card', 'Wire Transfer', 'Financing', 'Cash'];
+        const monthsList = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+        
+        const rawData = [];
+        
+        // Gerando 1200 registros de vendas simuladas com Faturamento
+        for(let i = 0; i < 1200; i++) {
+            let city = citiesList[Math.floor(Math.random() * citiesList.length)];
+            let model = modelsList[Math.floor(Math.random() * modelsList.length)];
+            
+            // Lógica para dar peso regional a alguns carros (Insights)
+            if (usLocations[city] === 'CA' && Math.random() > 0.4) model = 'Taycan'; // EVs fortes na Califórnia
+            if (usLocations[city] === 'TX' && Math.random() > 0.5) model = 'Cayenne'; // SUVs no Texas
+            if (city === 'Miami' && Math.random() > 0.6) model = '911 Turbo S'; // Esportivos de luxo em Miami
+            
+            // Cálculo de preço simulado com pequena variação
+            const basePrice = basePrices[model] || 100000;
+            const finalPrice = basePrice + (Math.random() * 15000 - 5000); // Variação de equipamentos/opcionais
+
+            rawData.push({
+                id: i + 1,
+                Model: model,
+                Year: yearsList[Math.floor(Math.random() * yearsList.length)],
+                City: city,
+                State: usLocations[city],
+                PayMethod: payMethodsList[Math.floor(Math.random() * payMethodsList.length)],
+                Month: monthsList[Math.floor(Math.random() * monthsList.length)],
+                Price: finalPrice
+            });
+        }
+
+        // --- 3. Controle de Estado ---
+        let filteredData = [...rawData];
+        let modelsByCityChartInstance = null;
+        let stateSalesChartInstance = null;
+        let modelYearTrendChartInstance = null;
+        let revenueByModelChartInstance = null;
+        let avgPriceByModelChartInstance = null;
+
+        // Configuração Global Chart.js (Dark Mode)
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.color = '#888888';
+        Chart.defaults.borderColor = '#2a2a2a';
+
+        // --- 4. Inicialização e Filtros ---
+        function init() {
+            populateFilters();
+            setupEventListeners();
+            updateDashboard();
+        }
+
+        function populateFilters() {
+            const uniqueModels = [...new Set(rawData.map(d => d.Model))].sort();
+            const uniqueYears = [...new Set(rawData.map(d => d.Year))].sort();
+            const uniqueCities = [...new Set(rawData.map(d => d.City))].sort();
+            const uniquePays = [...new Set(rawData.map(d => d.PayMethod))].sort();
+
+            const appendOptions = (selectId, data) => {
+                const select = document.getElementById(selectId);
+                data.forEach(item => {
+                    const opt = document.createElement('option');
+                    opt.value = item;
+                    opt.textContent = item;
+                    select.appendChild(opt);
+                });
+            };
+
+            appendOptions('filter-model', uniqueModels);
+            appendOptions('filter-year', uniqueYears);
+            appendOptions('filter-city', uniqueCities);
+            appendOptions('filter-pay', uniquePays);
+        }
+
+        function setupEventListeners() {
+            const filters = ['filter-model', 'filter-year', 'filter-city', 'filter-pay'];
+            filters.forEach(id => {
+                document.getElementById(id).addEventListener('change', applyFilters);
+            });
+
+            document.getElementById('reset-filters').addEventListener('click', () => {
+                filters.forEach(id => document.getElementById(id).value = 'all');
+                applyFilters();
+            });
+        }
+
+        function applyFilters() {
+            const selectedModel = document.getElementById('filter-model').value;
+            const selectedYear = document.getElementById('filter-year').value;
+            const selectedCity = document.getElementById('filter-city').value;
+            const selectedPay = document.getElementById('filter-pay').value;
+
+            filteredData = rawData.filter(d => {
+                const matchModel = selectedModel === 'all' || d.Model === selectedModel;
+                const matchYear = selectedYear === 'all' || d.Year === selectedYear;
+                const matchCity = selectedCity === 'all' || d.City === selectedCity;
+                const matchPay = selectedPay === 'all' || d.PayMethod === selectedPay;
+                return matchModel && matchYear && matchCity && matchPay;
+            });
+
+            updateDashboard();
+        }
+
+        function updateDashboard() {
+            // Atualizar KPIs do Banner
+            const totalSales = filteredData.length;
+            const totalRevenue = filteredData.reduce((acc, curr) => acc + curr.Price, 0);
+            
+            document.getElementById('total-sales-kpi').innerText = totalSales.toLocaleString();
+            document.getElementById('total-revenue-kpi').innerText = `$${(totalRevenue / 1000000).toFixed(2)}M`;
+            
+            // Renderizar Componentes
+            renderInsights();
+            renderModelsByCityChart();
+            renderStateSalesChart();
+            renderRevenueByModelChart();
+            renderAvgPriceByModelChart();
+            renderModelYearTrendChart();
+        }
+
+        // --- 5. Insights Cards ---
+        function renderInsights() {
+            const container = document.getElementById('insights-container');
+            container.innerHTML = '';
+
+            if (filteredData.length === 0) {
+                container.innerHTML = '<p class="text-sm text-porsche-gray">Nenhum dado encontrado para os filtros selecionados.</p>';
+                return;
+            }
+
+            const cityData = {};
+            filteredData.forEach(d => {
+                if(!cityData[d.City]) cityData[d.City] = {};
+                cityData[d.City][d.Model] = (cityData[d.City][d.Model] || 0) + 1;
+            });
+
+            // Pega as 3 cidades com maior volume total
+            const sortedCities = Object.keys(cityData).sort((a, b) => {
+                const totalA = Object.values(cityData[a]).reduce((sum, val) => sum + val, 0);
+                const totalB = Object.values(cityData[b]).reduce((sum, val) => sum + val, 0);
+                return totalB - totalA;
+            }).slice(0, 3);
+
+            sortedCities.forEach(city => {
+                const models = cityData[city];
+                const topModel = Object.keys(models).reduce((a, b) => models[a] > models[b] ? a : b);
+                const imageUrl = modelImages[topModel] || defaultImage;
+                
+                const card = document.createElement('div');
+                card.className = "bg-porsche-panel border border-gray-800 group flex flex-col cursor-pointer hover:border-gray-500 transition-all duration-300";
+                
+                card.innerHTML = `
+                    <div class="h-44 w-full overflow-hidden bg-black relative">
+                        <img src="${imageUrl}" alt="${topModel}" class="w-full h-full object-cover object-center opacity-70 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 ease-out">
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#1e1e1e] to-transparent opacity-80"></div>
+                        <div class="absolute bottom-4 left-4">
+                            <span class="bg-white/10 backdrop-blur-sm border border-white/20 text-white text-[9px] px-2 py-1 uppercase tracking-widest">${city}, ${usLocations[city]}</span>
+                        </div>
+                    </div>
+                    <div class="p-5 flex-grow border-t-2 border-transparent group-hover:border-porsche-red transition-colors duration-300">
+                        <h4 class="text-xl font-light text-white mb-1">${topModel}</h4>
+                        <p class="text-[10px] text-porsche-red mb-3 uppercase tracking-widest font-semibold">Best Seller</p>
+                        <p class="text-xs text-gray-400 font-light leading-relaxed">Volume de <span class="text-white font-medium">${models[topModel]} unidades</span> vendidas nesta região.</p>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // --- 6. Gráficos ---
+
+        function renderModelsByCityChart() {
+            const ctx = document.getElementById('modelsByCityChart').getContext('2d');
+            
+            const dataMap = {};
+            const availableModels = new Set();
+            
+            const cityTotals = {};
+            filteredData.forEach(d => cityTotals[d.City] = (cityTotals[d.City] || 0) + 1);
+            const topCities = Object.keys(cityTotals).sort((a,b) => cityTotals[b] - cityTotals[a]).slice(0, 5);
+
+            filteredData.forEach(d => {
+                if (topCities.includes(d.City)) {
+                    if(!dataMap[d.City]) dataMap[d.City] = {};
+                    dataMap[d.City][d.Model] = (dataMap[d.City][d.Model] || 0) + 1;
+                    availableModels.add(d.Model);
+                }
+            });
+
+            const labels = topCities;
+            const modelsArray = Array.from(availableModels);
+            
+            const colorPalette = [
+                '#d5001c', '#ffffff', '#555555', '#222222', 
+                '#ff3344', '#888888', '#aaaaaa', '#333333'
+            ];
+
+            const datasets = modelsArray.map((model, index) => {
+                return {
+                    label: model,
+                    data: labels.map(city => dataMap[city]?.[model] || 0),
+                    backgroundColor: colorPalette[index % colorPalette.length],
+                    borderRadius: 2,
+                    barPercentage: 0.7
+                };
+            });
+
+            if(modelsByCityChartInstance) modelsByCityChartInstance.destroy();
+
+            modelsByCityChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: labels, datasets: datasets },
+                options: {
+                    indexAxis: 'y', 
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { grid: { color: '#2a2a2a' } },
+                        y: { grid: { display: false } }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { usePointStyle: true, boxWidth: 6, font: { size: 10, family: 'Inter' } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderStateSalesChart() {
+            const canvas = document.getElementById('stateSalesChart');
+            const ctx = canvas.getContext('2d');
+            
+            const dataMap = {};
+            filteredData.forEach(d => {
+                dataMap[d.State] = (dataMap[d.State] || 0) + 1;
+            });
+
+            const labels = Object.keys(dataMap).sort((a, b) => dataMap[b] - dataMap[a]);
+            const data = labels.map(state => dataMap[state]);
+
+            if(stateSalesChartInstance) stateSalesChartInstance.destroy();
+
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, '#ff1a35'); 
+            gradient.addColorStop(0.6, '#d5001c'); 
+            gradient.addColorStop(1, '#1e1e1e'); 
+
+            stateSalesChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Unidades',
+                        data: data,
+                        backgroundColor: gradient,
+                        hoverBackgroundColor: '#ffffff',
+                        borderRadius: 4,
+                        barPercentage: 0.5,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: { padding: { top: 20 } },
+                    scales: {
+                        x: {
+                            grid: { display: false, drawBorder: false },
+                            border: { display: false },
+                            ticks: { font: { family: 'Inter', size: 11 }, color: '#e0e0e0' }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: { display: false, drawBorder: false },
+                            border: { display: false },
+                            ticks: { display: false } 
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleFont: { size: 12, family: 'Inter', weight: 'normal' },
+                            bodyFont: { size: 16, family: 'Inter', weight: 'bold' },
+                            padding: 12,
+                            displayColors: false
+                        }
+                    }
+                },
+                plugins: [{
+                    id: 'topLabelsDark',
+                    afterDatasetsDraw(chart) {
+                        const { ctx } = chart;
+                        ctx.font = "bold 11px Inter";
+                        ctx.fillStyle = "#888888";
+                        ctx.textAlign = "center";
+                        ctx.textBaseline = "bottom";
+                        
+                        chart.data.datasets.forEach((dataset, i) => {
+                            const meta = chart.getDatasetMeta(i);
+                            meta.data.forEach((bar, index) => {
+                                const data = dataset.data[index];
+                                ctx.fillText(data, bar.x, bar.y - 6);
+                            });
+                        });
+                    }
+                }]
+            });
+        }
+
+        function renderRevenueByModelChart() {
+            const ctx = document.getElementById('revenueByModelChart').getContext('2d');
+            
+            const revMap = {};
+            filteredData.forEach(d => {
+                revMap[d.Model] = (revMap[d.Model] || 0) + d.Price;
+            });
+
+            // Ordena pelo maior faturamento
+            const sortedModels = Object.keys(revMap).sort((a, b) => revMap[b] - revMap[a]).slice(0, 7);
+            const labels = sortedModels;
+            const data = labels.map(m => revMap[m]);
+
+            if(revenueByModelChartInstance) revenueByModelChartInstance.destroy();
+
+            // Criando gradiente horizontal (esquerda para a direita)
+            const gradient = ctx.createLinearGradient(0, 0, 400, 0);
+            gradient.addColorStop(0, '#1e1e1e'); 
+            gradient.addColorStop(0.6, '#d5001c'); 
+            gradient.addColorStop(1, '#ff1a35'); 
+
+            revenueByModelChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Faturamento (USD)',
+                        data: data,
+                        backgroundColor: gradient,
+                        hoverBackgroundColor: '#ffffff',
+                        borderRadius: 2,
+                        barPercentage: 0.6
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // Barras horizontais
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { 
+                            grid: { color: '#2a2a2a' },
+                            ticks: { 
+                                callback: function(value) { return '$' + (value/1000000).toFixed(1) + 'M'; }
+                            }
+                        },
+                        y: { grid: { display: false } }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.9)',
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Faturamento: $' + (context.raw / 1000000).toFixed(2) + 'M';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderAvgPriceByModelChart() {
+            const ctx = document.getElementById('avgPriceByModelChart').getContext('2d');
+            
+            const aggMap = {};
+            filteredData.forEach(d => {
+                if(!aggMap[d.Model]) aggMap[d.Model] = { sum: 0, count: 0 };
+                aggMap[d.Model].sum += d.Price;
+                aggMap[d.Model].count += 1;
+            });
+
+            // Calcula o médio e ordena
+            const avgData = Object.entries(aggMap).map(([model, metrics]) => {
+                return { model: model, avg: metrics.sum / metrics.count };
+            }).sort((a, b) => b.avg - a.avg).slice(0, 7);
+
+            const labels = avgData.map(item => item.model);
+            const data = avgData.map(item => item.avg);
+
+            if(avgPriceByModelChartInstance) avgPriceByModelChartInstance.destroy();
+
+            // Criando gradiente vertical (cima para baixo)
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, '#ff1a35'); 
+            gradient.addColorStop(0.6, '#d5001c'); 
+            gradient.addColorStop(1, '#1e1e1e'); 
+
+            avgPriceByModelChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Preço Médio (USD)',
+                        data: data,
+                        backgroundColor: gradient,
+                        hoverBackgroundColor: '#ffffff',
+                        borderRadius: 2,
+                        barPercentage: 0.6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { 
+                            grid: { color: '#2a2a2a' },
+                            ticks: { 
+                                callback: function(value) { return '$' + (value/1000).toFixed(0) + 'k'; }
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.9)',
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Preço Médio: $' + context.raw.toLocaleString('en-US', {maximumFractionDigits: 0});
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderModelYearTrendChart() {
+            const ctx = document.getElementById('modelYearTrendChart').getContext('2d');
+            
+            const monthOrder = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+            const dataMap = {};
+            const availableYears = new Set();
+
+            monthOrder.forEach(m => dataMap[m] = {});
+
+            filteredData.forEach(d => {
+                if(dataMap[d.Month]) {
+                    dataMap[d.Month][d.Year] = (dataMap[d.Month][d.Year] || 0) + 1;
+                    availableYears.add(d.Year);
+                }
+            });
+
+            const yearsArray = Array.from(availableYears).sort();
+            
+            const lineColors = {
+                '2022': { border: '#444444', bg: 'rgba(68, 68, 68, 0.1)' },
+                '2023': { border: '#888888', bg: 'rgba(136, 136, 136, 0.1)' },
+                '2024': { border: '#d5001c', bg: 'rgba(213, 0, 28, 0.15)' } 
+            };
+
+            const datasets = yearsArray.map((year) => {
+                const color = lineColors[year] || { border: '#fff', bg: 'rgba(255,255,255,0.1)' };
+                
+                return {
+                    label: `Year ${year}`,
+                    data: monthOrder.map(month => dataMap[month][year] || 0),
+                    borderColor: color.border,
+                    backgroundColor: color.bg,
+                    borderWidth: 2,
+                    tension: 0.4, 
+                    fill: true,   
+                    pointBackgroundColor: '#1e1e1e',
+                    pointBorderColor: color.border,
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                };
+            });
+
+            if(modelYearTrendChartInstance) modelYearTrendChartInstance.destroy();
+
+            modelYearTrendChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: { labels: monthOrder, datasets: datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    scales: {
+                        x: {
+                            grid: { display: false, drawBorder: false },
+                            ticks: { font: { size: 10 } }
+                        },
+                        y: {
+                            grid: { color: '#2a2a2a', drawBorder: false },
+                            beginAtZero: true,
+                            ticks: { font: { size: 10 } }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: { usePointStyle: true, boxWidth: 6, font: { size: 11 } }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleFont: { size: 12, weight: 'normal' },
+                            bodyFont: { size: 14, weight: 'bold' },
+                            padding: 12,
+                            usePointStyle: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize on load
+        window.onload = init;
+
+    </script>
+</body>
+</html>

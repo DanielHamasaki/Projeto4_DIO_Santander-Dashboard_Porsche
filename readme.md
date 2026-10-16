@@ -6,7 +6,7 @@ O objetivo é organizar e visualizar dados comerciais da divisão norte-american
 
 ## 🔗 Acesso ao Projeto
 
-**Dashboard Publicada:** https://danielhamasaki.github.io/Projeto4_DIO_Santander-Dashboard_Porsche/
+**Dashboard Publicada:** https://danielhamasaki.github.io/projeto4_dio_santander-dashboard_porsche/
 
 ## 💡 Perguntas de Negócio e KPIs Escolhidos
 
